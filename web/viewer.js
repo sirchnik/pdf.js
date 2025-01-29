@@ -232,8 +232,33 @@ function getViewerConfiguration() {
   };
 }
 
+function setPageColorTheme(isDark) {
+  document.getElementById("viewer").style.filter = document.getElementById(
+    "thumbnailView"
+  ).style.filter = isDark
+    ? "invert(64%) contrast(228%) brightness(80%) hue-rotate(180deg)"
+    : null;
+}
+
 function webViewerLoad() {
   const config = getViewerConfiguration();
+
+  switch (AppOptions.get("pageColorTheme")) {
+    case 0:
+      const darkModePreference = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      );
+      setPageColorTheme(darkModePreference.matches);
+      darkModePreference.addEventListener("change", e => {
+        setPageColorTheme(e.matches);
+      });
+      break;
+    case 1:
+      break;
+    case 2:
+      setPageColorTheme(true);
+      break;
+  }
 
   if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("GENERIC")) {
     // Give custom implementations of the default viewer a simpler way to

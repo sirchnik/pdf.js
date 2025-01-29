@@ -211,6 +211,13 @@
       "type": "boolean",
       "default": false
     },
+    "pageColorTheme": {
+      "title": "Page color theme",
+      "description": "The theme to use for the page colors.",
+      "type": "integer",
+      "enum": [0, 1, 2],
+      "default": 0
+    },
     "pageColorsBackground": {
       "description": "The color is a string as defined in CSS. Its goal is to help improve readability in high contrast mode",
       "type": "string",

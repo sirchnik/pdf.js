@@ -73,6 +73,10 @@ const Type = {
  *       primitive types and cannot rely on any imported types.
  */
 const defaultOptions = {
+  pageColorTheme: {
+    value: 0,
+    kind: OptionKind.VIEWER + OptionKind.PREFERENCE,
+  },
   allowedGlobalEvents: {
     /** @type {Object} */
     value: null,
