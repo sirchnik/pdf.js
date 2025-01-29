@@ -97,7 +97,7 @@ const AUTOPREFIXER_CONFIG = {
 const BABEL_TARGETS = ENV_TARGETS.join(", ");
 
 const BABEL_PRESET_ENV_OPTS = Object.freeze({
-  corejs: "3.39.0",
+  corejs: "3.40.0",
   exclude: ["web.structured-clone"],
   shippedProposals: true,
   useBuiltIns: "usage",
@@ -192,6 +192,7 @@ function createWebpackAlias(defines) {
   const libraryAlias = {
     "display-cmap_reader_factory": "src/display/stubs.js",
     "display-standard_fontdata_factory": "src/display/stubs.js",
+    "display-wasm_factory": "src/display/stubs.js",
     "display-fetch_stream": "src/display/stubs.js",
     "display-network": "src/display/stubs.js",
     "display-node_stream": "src/display/stubs.js",
@@ -224,6 +225,7 @@ function createWebpackAlias(defines) {
       "src/display/cmap_reader_factory.js";
     libraryAlias["display-standard_fontdata_factory"] =
       "src/display/standard_fontdata_factory.js";
+    libraryAlias["display-wasm_factory"] = "src/display/wasm_factory.js";
     libraryAlias["display-fetch_stream"] = "src/display/fetch_stream.js";
     libraryAlias["display-network"] = "src/display/network.js";
 
@@ -240,6 +242,7 @@ function createWebpackAlias(defines) {
       "src/display/cmap_reader_factory.js";
     libraryAlias["display-standard_fontdata_factory"] =
       "src/display/standard_fontdata_factory.js";
+    libraryAlias["display-wasm_factory"] = "src/display/wasm_factory.js";
     libraryAlias["display-fetch_stream"] = "src/display/fetch_stream.js";
     libraryAlias["display-network"] = "src/display/network.js";
     libraryAlias["display-node_stream"] = "src/display/node_stream.js";
@@ -644,6 +647,15 @@ function createStandardFontBundle() {
       encoding: false,
     }
   );
+}
+
+function createWasmBundle() {
+  return ordered([
+    gulp.src(["external/openjpeg/*.wasm"], {
+      base: "external/openjpeg",
+      encoding: false,
+    }),
+  ]);
 }
 
 function checkFile(filePath) {
@@ -1068,6 +1080,7 @@ function buildGeneric(defines, dir) {
       .pipe(gulp.dest(dir + "web")),
     createCMapBundle().pipe(gulp.dest(dir + "web/cmaps")),
     createStandardFontBundle().pipe(gulp.dest(dir + "web/standard_fonts")),
+    createWasmBundle().pipe(gulp.dest(dir + "web/wasm")),
 
     preprocessHTML("web/viewer.html", defines).pipe(gulp.dest(dir + "web")),
     preprocessCSS("web/viewer.css", defines)
@@ -1398,6 +1411,7 @@ gulp.task(
         createStandardFontBundle().pipe(
           gulp.dest(MOZCENTRAL_CONTENT_DIR + "web/standard_fonts")
         ),
+        createWasmBundle().pipe(gulp.dest(MOZCENTRAL_CONTENT_DIR + "web/wasm")),
 
         preprocessHTML("web/viewer.html", defines).pipe(
           gulp.dest(MOZCENTRAL_CONTENT_DIR + "web")
@@ -1500,6 +1514,9 @@ gulp.task(
         createStandardFontBundle().pipe(
           gulp.dest(CHROME_BUILD_CONTENT_DIR + "web/standard_fonts")
         ),
+        createWasmBundle().pipe(
+          gulp.dest(CHROME_BUILD_CONTENT_DIR + "web/wasm")
+        ),
 
         preprocessHTML("web/viewer.html", defines).pipe(
           gulp.dest(CHROME_BUILD_CONTENT_DIR + "web")
@@ -1586,6 +1603,7 @@ function buildLibHelper(bundleDefines, inputStream, outputDir) {
       "pdfjs-lib": "../pdf.js",
       "display-cmap_reader_factory": "./cmap_reader_factory.js",
       "display-standard_fontdata_factory": "./standard_fontdata_factory.js",
+      "display-wasm_factory": "./wasm_factory.js",
       "display-fetch_stream": "./fetch_stream.js",
       "display-network": "./network.js",
       "display-node_stream": "./node_stream.js",
@@ -1934,20 +1952,25 @@ function createBaseline(done) {
 
 gulp.task(
   "unittestcli",
-  gulp.series(setTestEnv, "lib-legacy", function runUnitTestCli(done) {
-    const options = [
-      "node_modules/jasmine/bin/jasmine",
-      "JASMINE_CONFIG_PATH=test/unit/clitests.json",
-    ];
-    const jasmineProcess = startNode(options, { stdio: "inherit" });
-    jasmineProcess.on("close", function (code) {
-      if (code !== 0) {
-        done(new Error("Unit tests failed."));
-        return;
-      }
-      done();
-    });
-  })
+  gulp.series(
+    setTestEnv,
+    "generic-legacy",
+    "lib-legacy",
+    function runUnitTestCli(done) {
+      const options = [
+        "node_modules/jasmine/bin/jasmine",
+        "JASMINE_CONFIG_PATH=test/unit/clitests.json",
+      ];
+      const jasmineProcess = startNode(options, { stdio: "inherit" });
+      jasmineProcess.on("close", function (code) {
+        if (code !== 0) {
+          done(new Error("Unit tests failed."));
+          return;
+        }
+        done();
+      });
+    }
+  )
 );
 
 gulp.task("lint", function (done) {
@@ -2061,6 +2084,15 @@ gulp.task(
   )
 );
 
+gulp.task("dev-wasm", function () {
+  const VIEWER_WASM_OUTPUT = "web/wasm/";
+
+  fs.rmSync(VIEWER_WASM_OUTPUT, { recursive: true, force: true });
+  fs.mkdirSync(VIEWER_WASM_OUTPUT, { recursive: true });
+
+  return createWasmBundle().pipe(gulp.dest(VIEWER_WASM_OUTPUT));
+});
+
 gulp.task(
   "dev-sandbox",
   gulp.series(
@@ -2094,6 +2126,13 @@ gulp.task(
         "l10n/**/*.ftl",
         { ignoreInitial: false },
         gulp.series("locale")
+      );
+    },
+    function watchWasm() {
+      gulp.watch(
+        "external/openjpeg/*",
+        { ignoreInitial: false },
+        gulp.series("dev-wasm")
       );
     },
     function watchDevSandbox() {

@@ -28,8 +28,6 @@ const isNodeJS =
 const IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 const FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
 
-const MAX_IMAGE_SIZE_TO_CACHE = 10e6; // Ten megabytes.
-
 // Represent the percentage of the height of a single-line field over
 // the font size. Acrobat seems to use this value.
 const LINE_FACTOR = 1.35;
@@ -501,16 +499,11 @@ class InvalidPDFException extends BaseException {
   }
 }
 
-class MissingPDFException extends BaseException {
-  constructor(msg) {
-    super(msg, "MissingPDFException");
-  }
-}
-
-class UnexpectedResponseException extends BaseException {
-  constructor(msg, status) {
-    super(msg, "UnexpectedResponseException");
+class ResponseException extends BaseException {
+  constructor(msg, status, missing) {
+    super(msg, "ResponseException");
     this.status = status;
+    this.missing = missing;
   }
 }
 
@@ -1160,8 +1153,6 @@ export {
   isNodeJS,
   LINE_DESCENT_FACTOR,
   LINE_FACTOR,
-  MAX_IMAGE_SIZE_TO_CACHE,
-  MissingPDFException,
   normalizeUnicode,
   objectFromMap,
   objectSize,
@@ -1171,6 +1162,7 @@ export {
   PasswordResponses,
   PermissionFlag,
   RenderingIntentFlag,
+  ResponseException,
   setVerbosityLevel,
   shadow,
   string32,
@@ -1180,7 +1172,6 @@ export {
   TextRenderingMode,
   toBase64Util,
   toHexUtil,
-  UnexpectedResponseException,
   UnknownErrorException,
   unreachable,
   utf8StringToString,

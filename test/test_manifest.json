@@ -1252,6 +1252,14 @@
     "about": "XObject with BBox array containing indirect object."
   },
   {
+    "id": "issue19389",
+    "file": "pdfs/issue19389.pdf",
+    "md5": "419357cd829b067347c64b9ae838af4a",
+    "rounds": 1,
+    "type": "eq",
+    "forms": true
+  },
+  {
     "id": "issue7115",
     "file": "pdfs/issue7115.pdf",
     "md5": "63c78e25a0433dd5a01ddff6ec720f29",
@@ -6365,6 +6373,21 @@
     "about": "Fixes one part of bug 1731483."
   },
   {
+    "id": "issue19326",
+    "file": "pdfs/issue19326.pdf",
+    "md5": "b4d937017daf439a6318501428e0c6ba",
+    "rounds": 1,
+    "type": "eq"
+  },
+  {
+    "id": "issue19326_main_thread_fetch",
+    "file": "pdfs/issue19326.pdf",
+    "md5": "b4d937017daf439a6318501428e0c6ba",
+    "rounds": 1,
+    "type": "eq",
+    "useWorkerFetch": false
+  },
+  {
     "id": "bug1140761",
     "file": "pdfs/bug1140761.pdf",
     "md5": "b74eced7634d4f248dc6265f8225d432",
@@ -8983,6 +9006,13 @@
     "type": "other"
   },
   {
+    "id": "bug1942064",
+    "file": "pdfs/bug1942064.pdf",
+    "md5": "d50b5ebb8cab1211609d16faa54ec47d",
+    "rounds": 1,
+    "type": "eq"
+  },
+  {
     "id": "issue16221-text",
     "file": "pdfs/issue16221.pdf",
     "md5": "62d93c9b3aa4ba3af5446504632e78a5",
@@ -11254,5 +11284,22 @@
     "rounds": 1,
     "link": true,
     "type": "other"
+  },
+  {
+    "id": "issue19319",
+    "file": "pdfs/issue19319.pdf",
+    "md5": "8612d3f0cf2dd067ea4aec9c8bf98763",
+    "rounds": 1,
+    "link": true,
+    "firstPage": 2,
+    "lastPage": 2,
+    "type": "eq"
+  },
+  {
+    "id": "issue19360",
+    "file": "pdfs/issue19360.pdf",
+    "md5": "b2de376f7e96fa2b6afc00dac016c40a",
+    "rounds": 1,
+    "type": "eq"
   }
 ]
