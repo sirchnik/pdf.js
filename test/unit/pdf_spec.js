@@ -18,16 +18,20 @@ import {
   AnnotationEditorParamsType,
   AnnotationEditorType,
   AnnotationMode,
+  AnnotationType,
   createValidAbsoluteUrl,
   FeatureTest,
+  getUuid,
   ImageKind,
   InvalidPDFException,
+  MathClamp,
   normalizeUnicode,
   OPS,
   PasswordResponses,
   PermissionFlag,
   ResponseException,
   shadow,
+  updateUrlHash,
   Util,
   VerbosityLevel,
 } from "../../src/shared/util.js";
@@ -52,6 +56,7 @@ import {
   RenderingCancelledException,
   setLayerDimensions,
   stopEvent,
+  SupportedImageMimeTypes,
 } from "../../src/display/display_utils.js";
 import { AnnotationEditorLayer } from "../../src/display/editor/annotation_editor_layer.js";
 import { AnnotationEditorUIManager } from "../../src/display/editor/tools.js";
@@ -60,6 +65,8 @@ import { ColorPicker } from "../../src/display/editor/color_picker.js";
 import { DOMSVGFactory } from "../../src/display/svg_factory.js";
 import { DrawLayer } from "../../src/display/draw_layer.js";
 import { GlobalWorkerOptions } from "../../src/display/worker_options.js";
+import { isValidExplicitDest } from "../../src/display/api_utils.js";
+import { SignatureExtractor } from "../../src/display/editor/drawers/signaturedraw.js";
 import { TextLayer } from "../../src/display/text_layer.js";
 import { TouchManager } from "../../src/display/touch_manager.js";
 import { XfaLayer } from "../../src/display/xfa_layer.js";
@@ -72,6 +79,7 @@ const expectedAPI = Object.freeze({
   AnnotationEditorUIManager,
   AnnotationLayer,
   AnnotationMode,
+  AnnotationType,
   build,
   ColorPicker,
   createValidAbsoluteUrl,
@@ -82,12 +90,15 @@ const expectedAPI = Object.freeze({
   getDocument,
   getFilenameFromUrl,
   getPdfFilenameFromUrl,
+  getUuid,
   getXfaPageViewport,
   GlobalWorkerOptions,
   ImageKind,
   InvalidPDFException,
   isDataScheme,
   isPdfFile,
+  isValidExplicitDest,
+  MathClamp,
   noContextMenu,
   normalizeUnicode,
   OPS,
@@ -102,9 +113,12 @@ const expectedAPI = Object.freeze({
   ResponseException,
   setLayerDimensions,
   shadow,
+  SignatureExtractor,
   stopEvent,
+  SupportedImageMimeTypes,
   TextLayer,
   TouchManager,
+  updateUrlHash,
   Util,
   VerbosityLevel,
   version,
@@ -123,6 +137,10 @@ describe("pdfjs_api", function () {
     // The imported Object contains an (automatically) inserted Symbol,
     // hence we copy the data to allow using a simple comparison below.
     expect({ ...pdfjsAPI }).toEqual(expectedAPI);
+
+    expect(Object.keys(globalThis.pdfjsLib).sort()).toEqual(
+      Object.keys(expectedAPI).sort()
+    );
   });
 });
 

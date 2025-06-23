@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
+import { AnnotationEditorType, AnnotationPrefix } from "../../shared/util.js";
 import {
-  AnnotationEditorType,
-  AnnotationPrefix,
-  shadow,
-} from "../../shared/util.js";
-import { OutputScale, PixelsPerInch } from "../display_utils.js";
+  OutputScale,
+  PixelsPerInch,
+  SupportedImageMimeTypes,
+} from "../display_utils.js";
 import { AnnotationEditor } from "./editor.js";
 import { StampAnnotationElement } from "../annotation_layer.js";
 
@@ -56,6 +56,7 @@ class StampEditor extends AnnotationEditor {
     super({ ...params, name: "stampEditor" });
     this.#bitmapUrl = params.bitmapUrl;
     this.#bitmapFile = params.bitmapFile;
+    this.defaultL10nId = "pdfjs-editor-stamp-editor";
   }
 
   /** @inheritdoc */
@@ -63,41 +64,17 @@ class StampEditor extends AnnotationEditor {
     AnnotationEditor.initialize(l10n, uiManager);
   }
 
-  static get supportedTypes() {
-    // See https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
-    // to know which types are supported by the browser.
-    const types = [
-      "apng",
-      "avif",
-      "bmp",
-      "gif",
-      "jpeg",
-      "png",
-      "svg+xml",
-      "webp",
-      "x-icon",
-    ];
-    return shadow(
-      this,
-      "supportedTypes",
-      types.map(type => `image/${type}`)
-    );
-  }
-
-  static get supportedTypesStr() {
-    return shadow(this, "supportedTypesStr", this.supportedTypes.join(","));
-  }
-
   /** @inheritdoc */
   static isHandlingMimeForPasting(mime) {
-    return this.supportedTypes.includes(mime);
+    return SupportedImageMimeTypes.includes(mime);
   }
 
   /** @inheritdoc */
   static paste(item, parent) {
-    parent.pasteEditor(AnnotationEditorType.STAMP, {
-      bitmapFile: item.getAsFile(),
-    });
+    parent.pasteEditor(
+      { mode: AnnotationEditorType.STAMP },
+      { bitmapFile: item.getAsFile() }
+    );
   }
 
   /** @inheritdoc */
@@ -258,7 +235,7 @@ class StampEditor extends AnnotationEditor {
       document.body.append(input);
     }
     input.type = "file";
-    input.accept = StampEditor.supportedTypesStr;
+    input.accept = SupportedImageMimeTypes.join(",");
     const signal = this._uiManager._signal;
     this.#bitmapPromise = new Promise(resolve => {
       input.addEventListener(
@@ -371,14 +348,13 @@ class StampEditor extends AnnotationEditor {
     }
 
     let baseX, baseY;
-    if (this.width) {
+    if (this._isCopy) {
       baseX = this.x;
       baseY = this.y;
     }
 
     super.render();
     this.div.hidden = true;
-    this.div.setAttribute("role", "figure");
 
     this.addAltTextButton();
 
@@ -390,15 +366,8 @@ class StampEditor extends AnnotationEditor {
       }
     }
 
-    if (this.width && !this.annotationElementId) {
-      // This editor was created in using copy (ctrl+c).
-      const [parentWidth, parentHeight] = this.parentDimensions;
-      this.setAt(
-        baseX * parentWidth,
-        baseY * parentHeight,
-        this.width * parentWidth,
-        this.height * parentHeight
-      );
+    if (this._isCopy) {
+      this._moveAfterPaste(baseX, baseY);
     }
 
     this._uiManager.addShouldRescale(this);
@@ -457,7 +426,7 @@ class StampEditor extends AnnotationEditor {
       width > MAX_RATIO * pageWidth ||
       height > MAX_RATIO * pageHeight
     ) {
-      // If the the image is too big compared to the page dimensions
+      // If the image is too big compared to the page dimensions
       // (more than MAX_RATIO) then we scale it down.
       const factor = Math.min(
         (MAX_RATIO * pageWidth) / width,
@@ -506,7 +475,7 @@ class StampEditor extends AnnotationEditor {
       action: "inserted_image",
     });
     if (this.#bitmapFileName) {
-      canvas.setAttribute("aria-label", this.#bitmapFileName);
+      this.div.setAttribute("aria-description", this.#bitmapFileName);
     }
   }
 
@@ -718,11 +687,6 @@ class StampEditor extends AnnotationEditor {
     );
   }
 
-  /** @inheritdoc */
-  getImageForAltText() {
-    return this.#canvas;
-  }
-
   #serializeBitmap(toUrl) {
     if (toUrl) {
       if (this.#isSvg) {
@@ -879,6 +843,7 @@ class StampEditor extends AnnotationEditor {
       // hence we serialize the bitmap to a data url.
       serialized.bitmapUrl = this.#serializeBitmap(/* toUrl = */ true);
       serialized.accessibilityData = this.serializeAltText(true);
+      serialized.isCopy = true;
       return serialized;
     }
 
